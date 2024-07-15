@@ -1,48 +1,86 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
-</p>
-
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
-
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+# BrioHR Technical Test
 
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+This is repository for BrioHR technical test.
+
+## Technical Decision
+
+I make this as extensible by creating collections for channels & notifications and giving relationship.
+As for companies & user, I decide they can have subscribed channels as flags embedded to respective "documents".
+When user doesn't have subscribed channels, it would fallback to default that company use.
+
+### Key points
+
+- use modular approach for each modules (companies, users, notifications).
+- use mock data for companies & users.
+- use seeder for notifications and channels.
+- have three notifications (happy-birthday, leave-balance-reminder, monthly-payslip).
+- have two channels (email, ui-only)
+- use strategy pattern for notifications and channels.
+- channel implementations differ depends on strategy used.
+- test cases for possible user channels subscription & notifications already covered.
+- test cases for exceptions already covered.
+
+### Struggle and Improvements
+
+- The code still tightly couple in module (esp. notification module) as I'm not to familiar with DI in NestJs.
+- I checked there's an event emitter packages that can be use decouple service, but haven't tested it yet.
+- I got some error when trying to run via docker regarding `class-validator` which require `moduleResolution: true` in `tsconfig.json`
+- I have not succeed to modeling one-to-many relationship in mongoose, some code should be easier if I can utilize model relationship.
+
+### Available endpoints
+```bash
+# health-check
+GET http://localhost:3000/health-check
+
+# notification histories by user
+GET http://localhost:3000/notifications/histories/:userId
+
+# create notification
+POST http://localhost:3000/notifications
+Body: {
+  "user_id": {{user_id}}
+  "company_id": {{company_id}},
+  "notification_type": {{happy-birthday/leave-balance-reminder/monthly-payslip}}
+}
+```
 
 ## Installation
 
+Clone the repo and `cd` into directory
+
+### Docker Setup
+
 ```bash
-$ npm install
+# build docker image and orchestrate network with mongodb
+$ docker-compose up --build
+
+# seed data
+$ npm run seed
+
+# api can be checked at http://localhost:3000/health-check
 ```
 
-## Running the app
+### Local Setup, when having docker issue
 
 ```bash
-# development
-$ npm run start
+# install dependencies
+$ npm install
 
-# watch mode
+# only spun up mongodb image
+$ docker-compose up --build mongodb
+
+# copy env, adjust if necessary
+$ cp .env.example .env
+
+# seed data
+$ npm run seed
+
+# start development server
 $ npm run start:dev
 
-# production mode
-$ npm run start:prod
+# api can be checked at http://localhost:3000/health-check
 ```
 
 ## Test
@@ -50,24 +88,4 @@ $ npm run start:prod
 ```bash
 # unit tests
 $ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
 ```
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](LICENSE).
